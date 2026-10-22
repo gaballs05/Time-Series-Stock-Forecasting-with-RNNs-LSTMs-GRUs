@@ -1,12 +1,17 @@
-name: Stock forecasting validation
+name: Stock forecasting — execute and publish results
 on:
   workflow_dispatch:
   push:
     paths:
+      - 'notebooks/stock_forecasting.ipynb'
       - '**.py'
-      - '**.ipynb'
       - 'requirements.txt'
-      - '.github/workflows/**'
+      - '.github/workflows/validate.yml'
+permissions:
+  contents: write
+concurrency:
+  group: stock-lab-main
+  cancel-in-progress: true
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -19,26 +24,61 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements.txt nbconvert nbformat ipykernel
-      - name: Validate notebook structure
+      - name: Validate source notebook
         run: |
           python - <<'PY'
-          import glob, nbformat
-          files=glob.glob('**/*.ipynb',recursive=True)
-          assert files, 'Expected at least one notebook'
-          for path in files:
-              nbformat.validate(nbformat.read(path,as_version=4))
-              print('Validated',path)
+          import nbformat
+          p='notebooks/stock_forecasting.ipynb'
+          nb=nbformat.read(p,as_version=4)
+          nbformat.validate(nb)
+          assert len(nb.cells)>=15
+          print(f'Validated: {p} with {len(nb.cells)} cells')
           PY
-      - name: Execute notebook
+      - name: Execute complete lab
         run: |
           jupyter nbconvert --to notebook --execute notebooks/stock_forecasting.ipynb --output stock_forecasting_executed.ipynb --output-dir . --ExecutePreprocessor.timeout=3600
-      - name: Upload executed notebook and trained checkpoints
+      - name: Inspect generated outputs
+        if: success()
+        run: |
+          find . -maxdepth 3 -type f \( -name '*.pt' -o -name '*.csv' -o -name 'executive_summary.md' -o -name 'environment.txt' \) -print
+          test -s stock_forecasting_executed.ipynb
+          python - <<'PY'
+          import json, glob
+          p='stock_forecasting_executed.ipynb'
+          nb=json.load(open(p))
+          code=[c for c in nb['cells'] if c['cell_type']=='code']
+          assert all(c.get('execution_count') is not None for c in code), 'Notebook has unexecuted code cells'
+          assert all(not any(o.get('output_type')=='error' for o in c.get('outputs',[])) for c in code)
+          assert len(glob.glob('**/checkpoints/*.pt', recursive=True)) >= 6, 'Missing model checkpoints'
+          assert len(glob.glob('**/reports/model_metrics.csv',recursive=True)) >= 1, 'Missing model metrics'
+          assert len(glob.glob('**/reports/executive_summary.md',recursive=True)) >= 1, 'Missing executive summary'
+          print('End-to-end validation PASSED; code cells:',len(code))
+          PY
+      - name: Archive executed notebook and models
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: forecasting-run
+          name: stock-lab-complete
+          retention-days: 90
           path: |
             stock_forecasting_executed.ipynb
-            checkpoints/
             data/
+            checkpoints/
+            reports/
+            notebooks/data/
+            notebooks/checkpoints/
+            notebooks/reports/
           if-no-files-found: warn
+      - name: Commit validated results to repository
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f stock_forecasting_executed.ipynb
+          for p in data checkpoints reports notebooks/data notebooks/checkpoints notebooks/reports; do
+            if [ -e "$p" ]; then git add -f "$p"; fi
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m "results: save validated notebook, data, metrics and weights [skip ci]"
+            git push
+          fi
