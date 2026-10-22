@@ -1,0 +1,7 @@
+Python: 3.11.17
+PyTorch: 2.14.1+cpu
+CUDA: None
+cuDNN: not available
+Device: cpu
+NumPy: 2.4.6
+Pandas: 3.0.6
