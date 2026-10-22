@@ -10,7 +10,7 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,14 +19,26 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements.txt nbconvert nbformat ipykernel
-      - name: Validate notebooks
+      - name: Validate notebook structure
         run: |
           python - <<'PY'
           import glob, nbformat
           files=glob.glob('**/*.ipynb',recursive=True)
-          for f in files:
-              nbformat.validate(nbformat.read(f,as_version=4))
-              print('Validated',f)
-          if not files:
-              print('No notebook committed yet; notebook execution pending.')
+          assert files, 'Expected at least one notebook'
+          for path in files:
+              nbformat.validate(nbformat.read(path,as_version=4))
+              print('Validated',path)
           PY
+      - name: Execute notebook
+        run: |
+          jupyter nbconvert --to notebook --execute notebooks/stock_forecasting.ipynb --output stock_forecasting_executed.ipynb --output-dir . --ExecutePreprocessor.timeout=3600
+      - name: Upload executed notebook and trained checkpoints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forecasting-run
+          path: |
+            stock_forecasting_executed.ipynb
+            checkpoints/
+            data/
+          if-no-files-found: warn
