@@ -22,6 +22,48 @@ Si se necesita un recorrido más corto, conviene abrir primero el **[resumen eje
 
 El [notebook fuente](./notebooks/stock_forecasting.ipynb) es la versión que GitHub Actions ejecuta. La diferencia es importante: el archivo fuente contiene los pasos reproducibles; el ejecutado también conserva sus resultados. Para estudiar cada bloque con calma, está la [guía de lectura y defensa](./GUIA_DE_ESTUDIO.md).
 
+## Resultados visuales
+
+Las siguientes imágenes se obtienen de la ejecución real del laboratorio. Se generan automáticamente a partir del cuaderno y de sus métricas; no son datos de ejemplo. Para ver todas las figuras, abra la [carpeta de gráficas](./notebooks/reports/figuras/). 
+
+### 1. Comparación de precisión
+
+El error RMSE se expresa en dólares: **menor significa mejor**. La comparación muestra tanto la red seleccionada mediante validación como los dos métodos sencillos de referencia.
+
+![Comparación del RMSE de prueba de la red seleccionada, el último cierre y la media móvil](./notebooks/reports/figuras/00_comparacion_rmse.png)
+
+### 2. Precio histórico y particiones de los datos
+
+La primera gráfica muestra las cotizaciones de Apple y dónde comienzan entrenamiento, validación y prueba. La separación temporal importa: los datos finales deben conservarse para evaluar la predicción, no para elegir el modelo.
+
+![Historial del precio de AAPL y separación cronológica](./notebooks/reports/figuras/01_precio_y_particiones.png)
+
+### 3. Lo que predijo la red frente a lo que realmente ocurrió
+
+Esta es una de las gráficas más importantes para explicar el trabajo: permite observar las diferencias entre el precio real y las predicciones del modelo escogido.
+
+![Cierre real de AAPL frente al estimado por la red recurrente](./notebooks/reports/figuras/06_cierre_real_y_estimado.png)
+
+### 4. ¿Cómo aprendieron las redes?
+
+Las curvas de pérdida permiten detectar si el error de entrenamiento disminuye mientras el error de validación deja de mejorar.
+
+![Curvas de entrenamiento y validación para las configuraciones de redes neuronales](./notebooks/reports/figuras/04_perdida_entrenamiento_validacion.png)
+
+### 5. Errores a lo largo del tiempo
+
+La diferencia entre valores reales y estimados se presenta como una serie temporal. Un patrón persistente en los residuos es una razón para desconfiar de una aparente buena precisión inicial.
+
+![Residuos de predicción a lo largo de la prueba](./notebooks/reports/figuras/08_residuos_en_el_tiempo.png)
+
+### 6. Validación temporal
+
+Cada fila indica el tramo que se usó para entrenar y el periodo posterior sobre el que se validó. Se representan las **tres particiones** realmente utilizadas.
+
+![Las tres particiones de validación temporal del laboratorio](./notebooks/reports/figuras/11_validacion_temporal.png)
+
+También están disponibles las [velas bursátiles](./notebooks/reports/figuras/02_velas_recientes.png), las [medias móviles](./notebooks/reports/figuras/03_medias_moviles.png), el [RMSE por época](./notebooks/reports/figuras/05_rmse_por_epoca.png), la [dispersión de errores](./notebooks/reports/figuras/07_dispersion_de_errores.png), el [histograma](./notebooks/reports/figuras/09_histograma_de_residuos.png) y la [autocorrelación](./notebooks/reports/figuras/10_autocorrelacion_de_residuos.png). El [notebook ejecutado](./stock_forecasting_executed.ipynb) contiene las figuras junto al código que las produjo.
+
 ## Datos utilizados
 
 Las cotizaciones se obtuvieron de **Yahoo Finance**, mediante `yfinance`, y se conservaron en [`notebooks/data/AAPL_ohlcv.csv`](./notebooks/data/AAPL_ohlcv.csv). La muestra descargada abarca del **22 de octubre de 2019 al 20 de octubre de 2026**. Después de calcular los indicadores y eliminar los registros iniciales sin historial suficiente, quedaron **1,709 sesiones**, desde el 2 de enero de 2020.
