@@ -64,7 +64,7 @@ El modelo recurrente elegido por validación fue **RNN multivariada con 60 sesio
 
 **La principal conclusión es que el modelo recurrente elegido no superó al método de repetir el último cierre.** El resultado no invalida el experimento: muestra por qué es necesario comparar redes neuronales con alternativas sencillas y separar validación de prueba. Las series de precios también pueden cambiar de comportamiento con el tiempo.
 
-Las cifras anteriores corresponden a la [ejecución verificada de GitHub Actions #15](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/runs/39701664697). Al volver a ejecutar el laboratorio, las métricas pueden variar ligeramente según las versiones instaladas y el entorno, aunque la muestra de precios permanezca guardada.
+Las cifras anteriores corresponden a la [ejecución completa en español de GitHub Actions](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/runs/39702999292). Al volver a ejecutar el laboratorio, las métricas pueden variar ligeramente según las versiones instaladas y el entorno, aunque la muestra de precios permanezca guardada.
 
 ## Archivos de entrega y evidencias
 
