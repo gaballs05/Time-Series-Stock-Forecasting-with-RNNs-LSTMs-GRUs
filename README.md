@@ -2,7 +2,7 @@
 
 [![Estado de GitHub Actions](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/workflows/validate.yml/badge.svg)](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/workflows/validate.yml)
 
-**Materia:** laboratorio de series de tiempo.  
+**Materia:** Aprendizaje Máquina.  
 **Caso de estudio:** Apple Inc. (AAPL).  
 **Herramientas:** Python, PyTorch, pandas, scikit-learn y Matplotlib.
 
