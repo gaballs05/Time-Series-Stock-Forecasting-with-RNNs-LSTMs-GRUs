@@ -42,11 +42,16 @@ jobs:
       - name: Ejecutar el laboratorio completo
         run: |
           jupyter nbconvert --to notebook --execute notebooks/stock_forecasting.ipynb --output stock_forecasting_executed.ipynb --output-dir . --ExecutePreprocessor.timeout=3600
+      - name: Preparar galería de resultados con gráficas reales
+        run: |
+          python scripts/exportar_graficas.py
       - name: Comprobar los archivos generados
         if: success()
         run: |
           find . -maxdepth 3 -type f \( -name '*.pt' -o -name '*.csv' -o -name 'executive_summary.md' -o -name 'environment.txt' \) -print
           test -s stock_forecasting_executed.ipynb
+          test -s notebooks/reports/figuras/00_comparacion_rmse.png
+          test -s notebooks/reports/figuras/06_cierre_real_y_estimado.png
           python - <<'PY'
           import json, glob
           p='stock_forecasting_executed.ipynb'
