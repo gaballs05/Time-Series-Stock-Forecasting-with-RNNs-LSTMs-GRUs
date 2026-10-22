@@ -1,17 +1,31 @@
-# Resumen ejecutivo — predicción del cierre de AAPL
+# Resumen ejecutivo: predicción del cierre de Apple
 
-**Pregunta de investigación.** ¿Las redes neuronales recurrentes predicen el cierre bursátil del siguiente día con mayor precisión que dos métodos sencillos basados en precios históricos?
+El objetivo fue estimar el cierre de AAPL para el día bursátil siguiente y comprobar
+si las redes recurrentes ofrecen una ventaja frente a dos referencias sencillas:
+repetir el último cierre y usar el promedio de los 20 anteriores.
 
-**Datos y procedimiento.** Se utilizaron cotizaciones diarias de Yahoo Finance del 2020-01-02 al 2026-10-20 (1709 sesiones después del procesamiento). Se separaron cronológicamente los datos en entrenamiento (70 %), validación (15 %) y prueba (15 %). La predicción abarca una sesión futura y utiliza, por regla general, una ventana previa de 60 sesiones. La estandarización se ajustó únicamente con datos de entrenamiento. Se evaluaron RNN, LSTM y GRU con entradas univariadas y multivariadas. La parada anticipada depende de la pérdida de validación y la selección final, del RMSE de validación.
+Se utilizaron datos diarios de Yahoo Finance desde 2020-01-02 hasta
+2026-10-20 (1709 sesiones después de preparar los indicadores).
+Los datos se separaron en orden cronológico: 70 % para entrenar, 15 % para validar
+y 15 % para la prueba final. La normalización se ajustó solo con entrenamiento.
+Se probaron RNN, LSTM y GRU, con entradas de una y seis variables. El modelo
+recurrente se eligió por su RMSE de validación, sin consultar la prueba final.
 
-**Modelo recurrente seleccionado.** RNN_6features_L60, con RMSE de validación de **5.673 USD**. En la prueba reservada obtuvo MAE de **27.013 USD**, RMSE de **33.314 USD** y MAPE de **8.83 %**.
+La elección fue **RNN_6features_L60**, con RMSE de validación de
+**5.673 USD**. En prueba obtuvo MAE de **27.013 USD**,
+RMSE de **33.314 USD** y MAPE de **8.83 %**.
+La referencia más precisa fue **Último cierre observado**
+(RMSE de **4.440 USD**). Por tanto, la red seleccionada
+**no superó** a la referencia sencilla. La diferencia entre validación y
+prueba indica que su rendimiento no se mantuvo en el periodo posterior.
 
-**Comparación con referencias.** El método de referencia con menor RMSE de prueba fue «Último cierre observado», con **4.440 USD**. El modelo recurrente seleccionado **no superó** este método en la prueba final. En estos datos, utilizar una arquitectura más compleja no significó predecir mejor.
+La LSTM evaluada en tres particiones temporales obtuvo un RMSE medio de
+validación de **12.798 USD**. También se comprobaron la recuperación
+de los pesos guardados y una estimación con las últimas 60 sesiones: **276.27 USD**.
+Esa cifra es una salida del modelo, no un precio confirmado ni una recomendación
+de inversión.
 
-**Recarga de pesos.** Se recuperaron los parámetros guardados de RNN_6features_L60 y se emplearon las últimas 60 sesiones para estimar el cierre siguiente: **276.27 USD**. La fecha concreta de pronóstico depende del último registro disponible. No es una recomendación para operar en bolsa.
-
-**Estabilidad temporal.** En la validación con ventanas expansivas se reentrenó una LSTM en 3 particiones, con RMSE promedio de validación de **12.798 USD**. Esas particiones no incluyen el conjunto final de prueba.
-
-**Alcances y límites.** Se comprobó la formación de ventanas, el entrenamiento, la recuperación de modelos y la comparación cuantitativa. Los cambios de régimen bursátil, la volatilidad y la dependencia temporal de los residuos pueden reducir la precisión fuera de la muestra. La franja de dispersión de errores que aparece en las gráficas es descriptiva, no un intervalo probabilístico calibrado. Solo se exploraron algunas configuraciones de ventana.
-
-**Reproducción.** Se fijó la semilla aleatoria en 42. El repositorio guarda los datos históricos en CSV, métricas, predicciones, pesos y un cuaderno ejecutado. Los resultados corresponden a esa muestra y al entorno registrado. Uso exclusivamente académico.
+La comparación es válida para esta muestra, no para todos los periodos del
+mercado. Cambios de régimen y volatilidad pueden alterar el error; además,
+la franja alrededor de las predicciones describe residuos observados y no
+constituye un intervalo de confianza calibrado. La semilla utilizada fue 42.
