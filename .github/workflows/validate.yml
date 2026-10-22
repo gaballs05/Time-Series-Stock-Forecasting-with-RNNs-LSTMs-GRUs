@@ -32,6 +32,9 @@ jobs:
           nb=nbformat.read(p,as_version=4)
           nbformat.validate(nb)
           assert len(nb.cells)>=15
+          for index,cell in enumerate(nb.cells):
+            if cell.cell_type == 'code':
+              compile(cell.source, f'{p}:cell{index}', 'exec')
           print(f'Validated: {p} with {len(nb.cells)} cells')
           PY
       - name: Execute complete lab
