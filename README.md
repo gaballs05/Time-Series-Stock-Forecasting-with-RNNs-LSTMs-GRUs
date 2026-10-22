@@ -1,68 +1,99 @@
-# Lab 2 — Time-Series Stock Forecasting with RNNs, LSTMs and GRUs
+# Laboratorio 2 — Predicción de precios bursátiles con redes recurrentes
 
-[![GitHub Actions](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/workflows/validate.yml/badge.svg)](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/workflows/validate.yml)
+[![Estado de GitHub Actions](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/workflows/validate.yml/badge.svg)](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/workflows/validate.yml)
 
-**Status: end-to-end execution passed.** [Verified workflow run #15](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/runs/39701664697), executed on 2026-10-22. Notebook, data cache, model weights and reports were committed to this repository automatically.
+**Materia:** laboratorio de series de tiempo.  
+**Caso de estudio:** Apple Inc. (AAPL).  
+**Herramientas:** Python, PyTorch, pandas, scikit-learn y Matplotlib.
 
-## Start here (all within GitHub)
+## Qué se investigó
 
-1. **[Open the fully executed notebook](./stock_forecasting_executed.ipynb)** — the actual submission artifact with cell outputs, charts, metrics and dynamically generated executive summary.
-2. **[Read the executive summary](./notebooks/reports/executive_summary.md)** — concise methodology, selected model, actual comparisons, limitations and conclusions.
-3. **[Inspect model metrics](./notebooks/reports/model_metrics.csv)** and **[baseline metrics](./notebooks/reports/baseline_metrics.csv)**.
-4. **[See the passing GitHub Actions execution](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/runs/39701664697)** (the run also includes a downloadable artifact, but downloading is not necessary to view the deliverables here).
+La pregunta principal es sencilla: **¿es posible predecir el precio de cierre de Apple para el día bursátil siguiente con mayor precisión que si se toma el último precio observado?**
 
-The editable source notebook is [notebooks/stock_forecasting.ipynb](./notebooks/stock_forecasting.ipynb). You do not need Google Colab or a desktop computer to view the outputs; GitHub renders notebooks directly.
+Se compararon tres tipos de redes neuronales recurrentes: RNN, LSTM y GRU. Cada una se evaluó con una sola variable (cierre) y con seis variables (cierre, volumen, medias móviles de 20 y 50 sesiones, volatilidad y rango intradía). También se probaron ventanas de observación de 30, 60 y 90 sesiones para una LSTM.
 
-## Research question
+El trabajo no pretende construir una herramienta de inversión. Se trata de comprobar qué funciona en una muestra histórica y reconocer, con los errores medidos, qué tan limitada puede ser una predicción bursátil.
 
-Do recurrent neural networks (vanilla RNN, LSTM, GRU) beat naïve historical-price forecasts for **next-trading-day AAPL closing prices**?
+## Por dónde comenzar
 
-- **Data:** Yahoo Finance AAPL daily OHLCV, raw cache from **2019-10-22 through 2026-10-20**, with 1,709 usable rows after feature engineering (from 2020-01-02).
-- **Prediction target:** next trading day's adjusted closing price, using the preceding observations only.
-- **Chronological holdout:** approximately 70% training, 15% validation, 15% test. Scalers are fitted on training observations exclusively.
-- **Feature sets:** univariate Close and multivariate Close, Volume, MA20, MA50, rolling volatility, and intraday range.
-- **Architectures:** RNN, LSTM, GRU; 60-day windows for six primary comparisons, with a 30-day/90-day univariate-LSTM sensitivity analysis.
-- **Training:** PyTorch, early stopping, best-checkpoint saves, ReduceLROnPlateau, fixed seed 42 and training/validation curves.
-- **Validation:** expanding-window, 3-fold LSTM walk-forward refitting, with aggregate errors and a schematic.
-- **Evaluation:** MAE, RMSE, guarded MAPE, last-value and 20-day moving-average baselines, prediction plots and residual diagnostics.
+El archivo principal de entrega es el **[notebook ejecutado](./stock_forecasting_executed.ipynb)**. Contiene el código, las explicaciones, las tablas y las gráficas resultantes de la ejecución. GitHub permite verlo desde el navegador, sin instalar programas.
 
-## Verified outcome
+Si se necesita un recorrido más corto, conviene abrir primero el **[resumen ejecutivo](./notebooks/reports/executive_summary.md)** y después consultar las figuras y tablas del notebook.
 
-The recurrent model chosen **by validation RMSE** was **RNN_6features_L60**: validation RMSE **5.673 USD**; held-out test MAE **27.013 USD**, RMSE **33.314 USD**, MAPE **8.83%**.
+El [notebook fuente](./notebooks/stock_forecasting.ipynb) es la versión que GitHub Actions ejecuta. La diferencia es importante: el archivo fuente contiene los pasos reproducibles; el ejecutado también conserva sus resultados. Para estudiar cada bloque con calma, está la [guía de lectura y defensa](./GUIA_DE_ESTUDIO.md).
 
-The **last-value baseline** was substantially better on that test segment: RMSE **4.440 USD** and MAE **3.139 USD**. **The experiment does not establish that recurrent models outperform simple baselines.** Selection used the validation segment, *not* test scores. See the full metrics CSV for all eight experiments and the executive summary for limitations.
+## Datos utilizados
 
-An independent saved-weight reload demonstrated a next-step estimate from the final **60 historical observations**; see the notebook for its output. These are educational forecasts, **not investment advice**.
+Las cotizaciones se obtuvieron de **Yahoo Finance**, mediante `yfinance`, y se conservaron en [`notebooks/data/AAPL_ohlcv.csv`](./notebooks/data/AAPL_ohlcv.csv). La muestra descargada abarca del **22 de octubre de 2019 al 20 de octubre de 2026**. Después de calcular los indicadores y eliminar los registros iniciales sin historial suficiente, quedaron **1,709 sesiones**, desde el 2 de enero de 2020.
 
-## Repository map
-
-| File or directory | Purpose |
+| Campo | Significado |
 | --- | --- |
-| [stock_forecasting_executed.ipynb](./stock_forecasting_executed.ipynb) | Final notebook, executed and containing charts/outputs |
-| [notebooks/stock_forecasting.ipynb](./notebooks/stock_forecasting.ipynb) | Editable reproducible notebook |
-| [notebooks/data/AAPL_ohlcv.csv](./notebooks/data/AAPL_ohlcv.csv) | Cached daily raw OHLCV data |
-| [notebooks/checkpoints/](./notebooks/checkpoints/) | Eight trained best-checkpoint weight files |
-| [notebooks/reports/executive_summary.md](./notebooks/reports/executive_summary.md) | Evidence-based one-page executive summary |
-| [notebooks/reports/model_metrics.csv](./notebooks/reports/model_metrics.csv) | Validation and held-out test metrics by architecture |
-| [notebooks/reports/baseline_metrics.csv](./notebooks/reports/baseline_metrics.csv) | Test metrics for simple baselines |
-| [notebooks/reports/test_predictions.csv](./notebooks/reports/test_predictions.csv) | Dates, observations, predictions and residuals |
-| [notebooks/reports/environment.txt](./notebooks/reports/environment.txt) | Actual Python, PyTorch, CUDA, NumPy and pandas versions |
-| [requirements.txt](./requirements.txt) | Dependency specification |
-| [.github/workflows/validate.yml](./.github/workflows/validate.yml) | Runs notebook, validates outputs, archives and commits artifacts |
+| Date | Fecha de la sesión bursátil. |
+| Open | Precio de apertura ajustado. |
+| High | Precio máximo ajustado. |
+| Low | Precio mínimo ajustado. |
+| Close | Precio de cierre ajustado; es la variable que se busca anticipar. |
+| Volume | Número de acciones negociadas. |
+| MA20 y MA50 | Promedios móviles de los 20 y 50 cierres anteriores, respectivamente. |
+| VOL20 | Desviación estándar móvil de los rendimientos diarios en 20 sesiones. |
+| Range | Diferencia entre máximo y mínimo, dividida entre el cierre. |
 
-## Reproducing in GitHub (without local setup)
+Fuente: [historial de Apple en Yahoo Finance](https://finance.yahoo.com/quote/AAPL/history/). Se descargaron precios ajustados (`auto_adjust=True`). Estos datos pueden variar si Yahoo Finance revisa su histórico.
 
-Open **Actions → Stock forecasting — execute and publish results → Run workflow**. The job installs CPU-only PyTorch and dependencies, validates the source notebook, executes every cell, checks that all required outputs exist, and commits a new executed notebook, CSV results, cached prices and weights if successful. Data is cached after the first successful run, so repeated runs use the committed snapshot unless you intentionally replace the CSV.
+## Cómo se evitó usar información del futuro
 
-GitHub Actions has execution/runtime quotas. Changing the dataset or package versions may change results; consult the recorded [environment](./notebooks/reports/environment.txt).
+Las observaciones se ordenaron por fecha. Se reservó aproximadamente el **70 % para entrenamiento**, el **15 % para validación** y el **15 % final para prueba**, sin mezclarlas aleatoriamente.
 
-## Source and field dictionary
+Cada predicción utiliza una ventana de sesiones anteriores. Los parámetros de normalización se calcularon exclusivamente con el tramo de entrenamiento. La elección de la arquitectura se hizo usando el **RMSE de validación**, no el de prueba. La evaluación de prueba se mantuvo para comprobar el comportamiento fuera de la muestra utilizada para elegir el modelo.
 
-- **Source:** Yahoo Finance, [Apple Inc. (AAPL) historical prices](https://finance.yahoo.com/quote/AAPL/history/), retrieved using the Python [yfinance](https://pypi.org/project/yfinance/) package (`auto_adjust=True`).
-- **Date:** trading-session date; **Open**, **High**, **Low**, **Close:** adjusted USD prices; **Volume:** shares traded.
-- **MA20/MA50:** 20- and 50-day trailing averages; **VOL20:** 20-day rolling standard deviation of daily returns; **Range:** daily (High-Low)/Close.
-- Predictions are conditioned only on preceding observations. Scalers and recurrent model weights are learned on chronological training data.
+Se entrenó con el optimizador Adam, parada anticipada cuando dejaba de mejorar la pérdida de validación y un programador para reducir la tasa de aprendizaje. Se guardaron los mejores pesos de cada configuración. También se realizó validación temporal *walk-forward* con tres reentrenamientos de una LSTM univariada sobre ventanas de entrenamiento expansivas.
 
-## Notes on interpretation
+## Resultados del experimento
 
-Closing-price levels are nonstationary, residual intervals plotted in the notebook are descriptive rather than calibrated, and walk-forward folds assess validation robustness but do not replace the untouched test set. The lab is educational and should not be used to place trades.
+El modelo recurrente elegido por validación fue **RNN multivariada con 60 sesiones de historial** (`RNN_6features_L60`).
+
+| Evaluación | Resultado |
+| --- | ---: |
+| RMSE de validación del modelo seleccionado | **5.673 USD** |
+| MAE de prueba del modelo seleccionado | 27.013 USD |
+| RMSE de prueba del modelo seleccionado | **33.314 USD** |
+| MAPE de prueba del modelo seleccionado | 8.83 % |
+| RMSE de prueba al repetir el último cierre | **4.440 USD** |
+| RMSE de prueba con media móvil de 20 sesiones | 11.759 USD |
+| RMSE promedio de validación *walk-forward* (LSTM, 3 particiones) | 12.798 USD |
+
+**La principal conclusión es que el modelo recurrente elegido no superó al método de repetir el último cierre.** El resultado no invalida el experimento: muestra por qué es necesario comparar redes neuronales con alternativas sencillas y separar validación de prueba. Las series de precios también pueden cambiar de comportamiento con el tiempo.
+
+Las cifras anteriores corresponden a la [ejecución verificada de GitHub Actions #15](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/runs/39701664697). Al volver a ejecutar el laboratorio, las métricas pueden variar ligeramente según las versiones instaladas y el entorno, aunque la muestra de precios permanezca guardada.
+
+## Archivos de entrega y evidencias
+
+| Archivo | Para qué sirve |
+| --- | --- |
+| [`stock_forecasting_executed.ipynb`](./stock_forecasting_executed.ipynb) | **Entrega principal**: código ejecutado, tablas, gráficas y conclusiones. |
+| [`notebooks/stock_forecasting.ipynb`](./notebooks/stock_forecasting.ipynb) | Código y explicación listos para una nueva ejecución. |
+| [`notebooks/reports/executive_summary.md`](./notebooks/reports/executive_summary.md) | Resumen ejecutivo de los resultados. También se integra en el notebook. |
+| [`notebooks/reports/model_metrics.csv`](./notebooks/reports/model_metrics.csv) | MAE, RMSE y MAPE de cada configuración. |
+| [`notebooks/reports/baseline_metrics.csv`](./notebooks/reports/baseline_metrics.csv) | Métricas de los dos métodos de referencia. |
+| [`notebooks/reports/test_predictions.csv`](./notebooks/reports/test_predictions.csv) | Fechas, cierres reales, estimaciones y residuos. |
+| [`notebooks/checkpoints/`](./notebooks/checkpoints/) | Pesos entrenados de RNN, LSTM y GRU. |
+| [`notebooks/data/AAPL_ohlcv.csv`](./notebooks/data/AAPL_ohlcv.csv) | Copia de las cotizaciones usadas en el experimento. |
+| [`requirements.txt`](./requirements.txt) | Bibliotecas necesarias. |
+| [`notebooks/reports/environment.txt`](./notebooks/reports/environment.txt) | Versiones de Python, PyTorch, CUDA y bibliotecas principales. |
+| [`.github/workflows/validate.yml`](./.github/workflows/validate.yml) | Ejecución automática y conservación de resultados. |
+| [`GUIA_DE_ESTUDIO.md`](./GUIA_DE_ESTUDIO.md) | Ruta para estudiar y explicar el trabajo manualmente. |
+
+Los nombres de bibliotecas, columnas originales del proveedor y archivos se conservan en su formato técnico para no romper las dependencias ni impedir reproducir el experimento. **La explicación del trabajo y la interpretación de los resultados están en español.**
+
+## Cómo repetir la ejecución desde GitHub
+
+En la pestaña [**Actions**](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions), seleccione el flujo **«Pronóstico bursátil — ejecutar y publicar resultados»** y la opción **Run workflow / Ejecutar flujo de trabajo**. El sistema instala las dependencias, valida el notebook, ejecuta sus celdas y conserva sus archivos resultantes si todas las comprobaciones concluyen correctamente.
+
+GitHub Actions tiene límites de tiempo y recursos. El archivo de datos se reutiliza para no cambiar accidentalmente la muestra al repetir el estudio. La semilla aleatoria utilizada es **42**.
+
+## Limitaciones que deben mencionarse
+
+- Los mercados cambian con el tiempo. Un error bajo en validación no garantiza buen desempeño en otra etapa histórica.
+- El margen dibujado alrededor de las predicciones describe la dispersión observada de los residuos; **no es un intervalo de confianza calibrado**.
+- Las pruebas con ventanas de 30, 60 y 90 días permiten una comparación acotada, no una optimización exhaustiva.
+- Las predicciones se presentan exclusivamente para fines académicos y **no constituyen asesoría financiera**.
