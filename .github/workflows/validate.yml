@@ -1,0 +1,32 @@
+name: Stock forecasting validation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '**.py'
+      - '**.ipynb'
+      - 'requirements.txt'
+      - '.github/workflows/**'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt nbconvert nbformat ipykernel
+      - name: Validate notebooks
+        run: |
+          python - <<'PY'
+          import glob, nbformat
+          files=glob.glob('**/*.ipynb',recursive=True)
+          for f in files:
+              nbformat.validate(nbformat.read(f,as_version=4))
+              print('Validated',f)
+          if not files:
+              print('No notebook committed yet; notebook execution pending.')
+          PY
