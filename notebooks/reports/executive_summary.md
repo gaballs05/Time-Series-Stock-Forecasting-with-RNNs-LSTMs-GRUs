@@ -1,17 +1,17 @@
-# Executive summary — AAPL next-day forecasting
+# Resumen ejecutivo — predicción del cierre de AAPL
 
-**Research question.** Can a recurrent neural network predict the next day's Apple closing price more accurately than simple historical baselines?
+**Pregunta de investigación.** ¿Las redes neuronales recurrentes predicen el cierre bursátil del siguiente día con mayor precisión que dos métodos sencillos basados en precios históricos?
 
-**Data and method.** Yahoo Finance daily OHLCV data covering 2020-01-02 to 2026-10-20 (1709 processed trading days). A strictly chronological 70%/15%/15% train/validation/test split, 60-day lookback, 1-day horizon, and training-only scaling were used. Three recurrent architectures (RNN, LSTM, GRU) were evaluated using univariate and multivariate feature sets. Checkpoints and early stopping are based on validation loss; final architecture selection is based on validation RMSE.
+**Datos y procedimiento.** Se utilizaron cotizaciones diarias de Yahoo Finance del 2 de enero de 2020 al 20 de octubre de 2026 (1,709 sesiones después del procesamiento). Se separaron cronológicamente los datos en entrenamiento (70 %), validación (15 %) y prueba (15 %). La predicción abarca una sesión futura y utiliza, por regla general, una ventana previa de 60 sesiones. La estandarización se ajustó únicamente con datos de entrenamiento. Se evaluaron RNN, LSTM y GRU con entradas univariadas y multivariadas. La parada anticipada depende de la pérdida de validación y la selección final, del RMSE de validación.
 
-**Selected model.** RNN_6features_L60, validation RMSE **5.673 USD**. Its untouched final test scores were MAE **27.013 USD**, RMSE **33.314 USD**, and MAPE **8.83%**.
+**Modelo recurrente seleccionado.** RNN_6features_L60, con RMSE de validación de **5.673 USD**. En la prueba reservada obtuvo MAE de **27.013 USD**, RMSE de **33.314 USD** y MAPE de **8.83 %**.
 
-**Baselines.** The strongest naïve/moving-average baseline on test was Last value with RMSE **4.440 USD**. The selected recurrent model **did not outperform** this baseline on the test segment. A recurrent model should not be presumed superior to a last-value predictor.
+**Comparación con referencias.** El método de referencia con menor RMSE de prueba fue «Último cierre observado», con **4.440 USD**. El modelo recurrente seleccionado **no superó** este método en la prueba final. En estos datos, utilizar una arquitectura más compleja no significó predecir mejor.
 
-**60-day reload demonstration.** RNN_6features_L60 successfully reloaded using only the last 60 observed trading days to estimate the following closing price (**276.27 USD**); the exact forecasting date depends on the latest available trading session. This is not a trade recommendation.
+**Recarga de pesos.** Se recuperaron los parámetros guardados de RNN_6features_L60 y se emplearon las últimas 60 sesiones para estimar el cierre siguiente: **276.27 USD**. La fecha concreta del pronóstico depende del último registro disponible. No es una recomendación para operar en bolsa.
 
-**Temporal robustness.** Expanding-window walk-forward LSTM refits yielded mean validation RMSE **12.798 USD** across 3 folds. These are validation folds only and are not estimates from the final test interval.
+**Estabilidad temporal.** En la validación con ventanas expansivas se reentrenó una LSTM en 3 particiones, con RMSE promedio de validación de **12.798 USD**. Esas particiones no incluyen el conjunto final de prueba.
 
-**What worked and limitations.** Sliding windows, recurrent training, checkpoint reload, and comparisons are implemented. Financial prices are nonstationary: regime shifts, volatility and persistent residual structure may erode generalization. Residual spread is descriptive, not a calibrated prediction interval. Hyperparameter search is limited. Past prices and indicators do not establish causal forecastability.
+**Alcances y límites.** Se comprobó la formación de ventanas, el entrenamiento, la recuperación de modelos y la comparación cuantitativa. Los cambios de régimen bursátil, la volatilidad y la dependencia temporal de los residuos pueden reducir la precisión fuera de la muestra. La franja de dispersión de errores es descriptiva, no un intervalo probabilístico calibrado. Solo se exploraron algunas configuraciones de ventana.
 
-**Reproducibility.** Seed 42; the workflow caches the original OHLCV CSV, exports metrics and prediction CSVs, archives PyTorch weights, and preserves the executed notebook. Results apply to the downloaded data snapshot and package versions captured by the runner. Not financial advice.
+**Reproducción.** Se fijó la semilla aleatoria en 42. El repositorio conserva datos históricos, métricas, predicciones, pesos y el cuaderno ejecutado. Los resultados corresponden a esa muestra y al entorno registrado. Uso exclusivamente académico.
