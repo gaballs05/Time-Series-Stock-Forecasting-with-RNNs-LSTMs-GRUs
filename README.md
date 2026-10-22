@@ -10,9 +10,9 @@
 
 La pregunta principal es sencilla: **¿es posible predecir el precio de cierre de Apple para el día bursátil siguiente con mayor precisión que si se toma el último precio observado?**
 
-Se compararon tres tipos de redes neuronales recurrentes: RNN, LSTM y GRU. Cada una se evaluó con una sola variable (cierre) y con seis variables (cierre, volumen, medias móviles de 20 y 50 sesiones, volatilidad y rango intradía). También se probaron ventanas de observación de 30, 60 y 90 sesiones para una LSTM.
+Para comprobarlo, se entrenaron RNN, LSTM y GRU con dos entradas distintas: solo el cierre, y el cierre acompañado de volumen e indicadores calculados a partir del historial. En una LSTM se compararon también ventanas de 30, 60 y 90 sesiones. La intención no era acumular modelos, sino ver si cambiar la arquitectura, las variables o el historial modificaba el error.
 
-El trabajo no pretende construir una herramienta de inversión. Se trata de comprobar qué funciona en una muestra histórica y reconocer, con los errores medidos, qué tan limitada puede ser una predicción bursátil.
+Los datos pertenecen a una muestra histórica concreta. El experimento mide errores de predicción; no valida una estrategia para operar en bolsa.
 
 ## Por dónde comenzar
 
@@ -46,7 +46,7 @@ Las observaciones se ordenaron por fecha. Se reservó aproximadamente el **70 % 
 
 Cada predicción utiliza una ventana de sesiones anteriores. Los parámetros de normalización se calcularon exclusivamente con el tramo de entrenamiento. La elección de la arquitectura se hizo usando el **RMSE de validación**, no el de prueba. La evaluación de prueba se mantuvo para comprobar el comportamiento fuera de la muestra utilizada para elegir el modelo.
 
-Se entrenó con el optimizador Adam, parada anticipada cuando dejaba de mejorar la pérdida de validación y un programador para reducir la tasa de aprendizaje. Se guardaron los mejores pesos de cada configuración. También se realizó validación temporal *walk-forward* con tres reentrenamientos de una LSTM univariada sobre ventanas de entrenamiento expansivas.
+El entrenamiento usa Adam. Si la pérdida de validación deja de mejorar, se detiene antes de agotar las épocas previstas; cuando se estanca, se reduce la tasa de aprendizaje. Se conserva la mejor versión de cada modelo. Como comprobación adicional, una LSTM univariada se reentrena tres veces aumentando el historial disponible (*walk-forward*).
 
 ## Resultados del experimento
 
@@ -62,9 +62,13 @@ El modelo recurrente elegido por validación fue **RNN multivariada con 60 sesio
 | RMSE de prueba con media móvil de 20 sesiones | 11.759 USD |
 | RMSE promedio de validación *walk-forward* (LSTM, 3 particiones) | 12.798 USD |
 
-**La principal conclusión es que el modelo recurrente elegido no superó al método de repetir el último cierre.** El resultado no invalida el experimento: muestra por qué es necesario comparar redes neuronales con alternativas sencillas y separar validación de prueba. Las series de precios también pueden cambiar de comportamiento con el tiempo.
+**El modelo recurrente elegido no superó al método de repetir el último cierre.** En validación obtuvo un error mucho menor que en prueba; la diferencia merece atención porque indica que el desempeño no se mantuvo al pasar a fechas posteriores. La referencia ingenua resultó más precisa en la prueba final. No hay motivo para disimularlo: es precisamente lo que revelan los datos.
 
 Las cifras anteriores corresponden a la [ejecución completa en español de GitHub Actions](https://github.com/gaballs05/Time-Series-Stock-Forecasting-with-RNNs-LSTMs-GRUs/actions/runs/39705897168). Al volver a ejecutar el laboratorio, las métricas pueden variar ligeramente según las versiones instaladas y el entorno, aunque la muestra de precios permanezca guardada.
+
+## Incidencia real durante la ejecución
+
+En una ejecución anterior, la recuperación de un modelo falló porque el tensor tenía tipo `float64` y la red esperaba `float32`. Se corrigió convirtiendo explícitamente las ventanas de entrada antes de usarlas con PyTorch. También se ajustó la selección del modelo para que dependiera de validación y no de prueba. Estos cambios se comprobaron después con GitHub Actions; no son errores hipotéticos.
 
 ## Archivos de entrega y evidencias
 
