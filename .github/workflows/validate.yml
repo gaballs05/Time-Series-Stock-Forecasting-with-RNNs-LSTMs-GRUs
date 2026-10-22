@@ -1,4 +1,4 @@
-name: Stock forecasting — execute and publish results
+name: Pronóstico bursátil — ejecutar y publicar resultados
 on:
   workflow_dispatch:
   push:
@@ -22,11 +22,11 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
-      - name: Install dependencies
+      - name: Instalar dependencias
         run: |
           python -m pip install 'torch>=2.3' --index-url https://download.pytorch.org/whl/cpu
           python -m pip install -r requirements.txt nbconvert nbformat ipykernel
-      - name: Validate source notebook
+      - name: Validar el notebook original
         run: |
           python - <<'PY'
           import nbformat
@@ -37,12 +37,12 @@ jobs:
           for index,cell in enumerate(nb.cells):
             if cell.cell_type == 'code':
               compile(cell.source, f'{p}:cell{index}', 'exec')
-          print(f'Validated: {p} with {len(nb.cells)} cells')
+          print(f'Cuaderno validado: {p}, con {len(nb.cells)} celdas')
           PY
-      - name: Execute complete lab
+      - name: Ejecutar el laboratorio completo
         run: |
           jupyter nbconvert --to notebook --execute notebooks/stock_forecasting.ipynb --output stock_forecasting_executed.ipynb --output-dir . --ExecutePreprocessor.timeout=3600
-      - name: Inspect generated outputs
+      - name: Comprobar los archivos generados
         if: success()
         run: |
           find . -maxdepth 3 -type f \( -name '*.pt' -o -name '*.csv' -o -name 'executive_summary.md' -o -name 'environment.txt' \) -print
@@ -52,14 +52,14 @@ jobs:
           p='stock_forecasting_executed.ipynb'
           nb=json.load(open(p))
           code=[c for c in nb['cells'] if c['cell_type']=='code']
-          assert all(c.get('execution_count') is not None for c in code), 'Notebook has unexecuted code cells'
+          assert all(c.get('execution_count') is not None for c in code), 'Hay celdas de código sin ejecutar'
           assert all(not any(o.get('output_type')=='error' for o in c.get('outputs',[])) for c in code)
-          assert len(glob.glob('**/checkpoints/*.pt', recursive=True)) >= 6, 'Missing model checkpoints'
-          assert len(glob.glob('**/reports/model_metrics.csv',recursive=True)) >= 1, 'Missing model metrics'
-          assert len(glob.glob('**/reports/executive_summary.md',recursive=True)) >= 1, 'Missing executive summary'
-          print('End-to-end validation PASSED; code cells:',len(code))
+          assert len(glob.glob('**/checkpoints/*.pt', recursive=True)) >= 6, 'Faltan archivos con pesos de los modelos'
+          assert len(glob.glob('**/reports/model_metrics.csv',recursive=True)) >= 1, 'Falta la tabla de métricas de los modelos'
+          assert len(glob.glob('**/reports/executive_summary.md',recursive=True)) >= 1, 'Falta el resumen ejecutivo'
+          print('Validación completa superada. Celdas de código:',len(code))
           PY
-      - name: Archive executed notebook and models
+      - name: Conservar cuaderno ejecutado y modelos
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -74,7 +74,7 @@ jobs:
             notebooks/checkpoints/
             notebooks/reports/
           if-no-files-found: warn
-      - name: Commit validated results to repository
+      - name: Publicar los resultados validados en el repositorio
         if: success() && github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
@@ -84,6 +84,6 @@ jobs:
             if [ -e "$p" ]; then git add -f "$p"; fi
           done
           if ! git diff --cached --quiet; then
-            git commit -m "results: save validated notebook, data, metrics and weights [skip ci]"
+            git commit -m "resultados: guardar cuaderno, datos, métricas y pesos comprobados [skip ci]"
             git push
           fi
