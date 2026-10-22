@@ -1,6 +1,6 @@
 # Guía de lectura y defensa del laboratorio
 
-Esta guía sirve para ubicar el contenido de la entrega y entender qué resuelve cada parte. No reemplaza al notebook ni pretende que se memoricen sus funciones: el objetivo es poder explicar, con palabras propias, de dónde salen los resultados.
+El notebook es la entrega; esta guía señala qué parte conviene leer cuando aparece una duda. Para entenderlo no basta con recordar el nombre de una función: hay que poder decir qué recibe, qué calcula y cómo se comprueba su resultado.
 
 ## Ruta rápida para presentar el trabajo
 
@@ -21,6 +21,16 @@ Esta guía sirve para ubicar el contenido de la entrega y entender qué resuelve
 | ¿Qué se hizo con walk-forward? | **8. Esquema de validación** y **10. Validación temporal** | Tres reentrenamientos con más historial y validación posterior, sin incluir la prueba final. |
 | ¿Se puede reutilizar el modelo? | **9. Recuperación de pesos** | Se recargan los pesos y se estiman nuevos valores a partir de las últimas 60 sesiones. |
 | ¿Cuál fue la conclusión? | **12. Resumen ejecutivo** y [resumen externo](./notebooks/reports/executive_summary.md) | La RNN seleccionada por validación tuvo peor RMSE de prueba que el método de repetir el último cierre. |
+
+## Qué decisiones vale la pena explicar
+
+**Por qué Apple:** tiene un historial público diario suficiente para el ejercicio y permite obtener los campos OHLCV desde Yahoo Finance. No se eligió por una promesa de rentabilidad.
+
+**Por qué conservar el CSV:** si la fuente cambia, ejecutar el código mañana podría producir otras cifras. El archivo guardado fija la muestra usada en las gráficas y las métricas.
+
+**Por qué comparar con el último cierre:** un pronóstico más complejo solo resulta útil en esta prueba si mejora una referencia muy fácil de calcular.
+
+**Qué error se corrigió:** una ejecución falló al recargar el modelo por incompatibilidad entre `float64` y `float32`. Revise la función de recarga y la conversión de tipos antes de probarla por su cuenta.
 
 ## Tres distinciones importantes
 
